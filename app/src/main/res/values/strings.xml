@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AnimatedCarousel</string>
+    <item type="id" name="views_animation_in">100</item>
+    <item type="id" name="views_animation_out">101</item>
+</resources>
