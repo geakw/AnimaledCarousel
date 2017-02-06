@@ -14,7 +14,7 @@ import android.widget.FrameLayout;
 public class ViewsAnimator extends FrameLayout {
     int mWhichChild = 0;
     boolean mFirstTime = true;
-    boolean mAnimateFirstTime = true;
+    boolean mAnimateFirstTime = false;
 
     public ViewsAnimator(Context context) {
         super(context);
@@ -56,31 +56,40 @@ public class ViewsAnimator extends FrameLayout {
         setDisplayedChild(mWhichChild - 1);
     }
 
-    void showOnly(int childIndex, boolean animate) {
+    void showOnly(int childIndex,boolean animate) {
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
             if (i == childIndex) {
+                child.setVisibility(View.VISIBLE);
                 Animator inAnimator = (Animator) child.getTag(R.id.views_animation_in);
                 if (animate && inAnimator != null) {
                     inAnimator.start();
                 }
-                child.setVisibility(View.VISIBLE);
                 mFirstTime = false;
             } else {
                 Animator outAnimator = (Animator) child.getTag(R.id.views_animation_out);
-                if (animate && outAnimator != null) {
+                if (animate && outAnimator != null && child.getVisibility() == View.VISIBLE) {
                     outAnimator.start();
+                } else {
+                    child.setVisibility(View.GONE);
                 }
-//                child.setVisibility(View.GONE);
             }
         }
     }
 
+    /**
+     * Shows only the specified child. The other displays Views exit the screen
+     * with the {@link #getOutAnimation() out animation} and the specified child
+     * enters the screen with the {@link #getInAnimation() in animation}.
+     *
+     * @param childIndex The index of the child to be shown.
+     */
     void showOnly(int childIndex) {
         final boolean animate = (!mFirstTime || mAnimateFirstTime);
         showOnly(childIndex, animate);
     }
+
 
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
@@ -88,6 +97,7 @@ public class ViewsAnimator extends FrameLayout {
         if (getChildCount() == 1) {
             child.setVisibility(View.VISIBLE);
         } else {
+            child.setTranslationX(DeviceUtil.getScreenWidth(getContext()));
             child.setVisibility(View.GONE);
         }
         if (index >= 0 && mWhichChild >= index) {
@@ -151,13 +161,19 @@ public class ViewsAnimator extends FrameLayout {
     }
 
     public static void setInAnimator(final View view, Animator animator) {
-        animator.setDuration(300);
+        animator.setDuration(500);
         view.setTag(R.id.views_animation_in, animator);
     }
 
 
-    public static void setOutAnimator(View view, Animator animator) {
-        animator.setDuration(300);
+    public static void setOutAnimator(final View view, Animator animator) {
+        animator.setDuration(500);
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                view.setVisibility(View.GONE);
+            }
+        });
         view.setTag(R.id.views_animation_out, animator);
     }
 
